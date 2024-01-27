@@ -54,44 +54,53 @@ async fn main() {
             0.001
         };
 
-        // Check if mouse is pressed
-        if is_mouse_button_down(MouseButton::Left) {
-            // get mouse position
-            let mouse_position = mouse_position();
+        // Check if mouse is in the window
+        if mouse_position().0 > 0.
+            && mouse_position().1 > 0.
+            && mouse_position().0 < WINDOW_WIDTH
+            && mouse_position().1 < WIDOW_HEIGHT
+        {
+            // Check if mouse is pressed
+            if is_mouse_button_down(MouseButton::Left) {
+                // get mouse position
+                let mouse_position = mouse_position();
 
-            // check if out of bounds
-            if mouse_position.0 < 0.
-                || mouse_position.1 < 0.
-                || mouse_position.0 > WINDOW_WIDTH
-                || mouse_position.1 > WIDOW_HEIGHT
-            {
-                continue;
-            }
+                // check if out of bounds
+                if mouse_position.0 < 0.
+                    || mouse_position.1 < 0.
+                    || mouse_position.0 > WINDOW_WIDTH
+                    || mouse_position.1 > WIDOW_HEIGHT
+                {
+                    continue;
+                }
 
-            // get the grid position
-            let grid_x = (mouse_position.0 / WINDOW_WIDTH * GRID_WIDTH as f32) as isize;
-            let grid_y = (mouse_position.1 / WIDOW_HEIGHT * GRID_WIDTH as f32) as isize;
+                // get the grid position
+                let grid_x = (mouse_position.0 / WINDOW_WIDTH * GRID_WIDTH as f32) as isize;
+                let grid_y = (mouse_position.1 / WIDOW_HEIGHT * GRID_WIDTH as f32) as isize;
 
-            // spawn the sand (50% probability, around the mouse position based on the radius)
-            // ignore the out of bounds
-            for x in (grid_x - radius as isize)..(grid_x + radius as isize) {
-                for y in (grid_y - radius as isize)..(grid_y + radius as isize) {
-                    // check if out of bounds
-                    if x < 0
-                        || y < 0
-                        || x > (GRID_WIDTH - 1) as isize
-                        || y > (GRID_WIDTH - 1) as isize
-                    {
-                        continue;
-                    }
+                // spawn the sand (50% probability, around the mouse position based on the radius)
+                // ignore the out of bounds
+                for x in (grid_x - radius as isize)..(grid_x + radius as isize) {
+                    for y in (grid_y - radius as isize)..(grid_y + radius as isize) {
+                        // check if out of bounds
+                        if x < 0
+                            || y < 0
+                            || x > (GRID_WIDTH - 1) as isize
+                            || y > (GRID_WIDTH - 1) as isize
+                        {
+                            continue;
+                        }
 
-                    // check if the cell is empty
-                    if canvas[x as usize][y as usize] == 0. {
-                        // check if the cell is in the radius
-                        if ((x - grid_x).pow(2) + (y - grid_y).pow(2)) < (radius.pow(2) as isize) {
-                            // spawn the sand with 50% probability
-                            if random_bool() {
-                                canvas[x as usize][y as usize] = current_color;
+                        // check if the cell is empty
+                        if canvas[x as usize][y as usize] == 0. {
+                            // check if the cell is in the radius
+                            if ((x - grid_x).pow(2) + (y - grid_y).pow(2))
+                                < (radius.pow(2) as isize)
+                            {
+                                // spawn the sand with 50% probability
+                                if random_bool() {
+                                    canvas[x as usize][y as usize] = current_color;
+                                }
                             }
                         }
                     }
