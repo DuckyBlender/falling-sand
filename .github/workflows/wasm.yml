@@ -1,0 +1,23 @@
+name: Rust to WASM
+
+on:
+  push:
+    branches: ["main"]
+  pull_request:
+    branches: ["main"]
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+      - name: Add wasm target
+        run: rustup target add wasm32-unknown-unknown
+      - name: Build
+        run: cargo build --target wasm32-unknown-unknown --release
+      - name: Move wasm file
+        run: mv target/wasm32-unknown-unknown/release/falling-sand.wasm ./docs/
