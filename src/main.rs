@@ -1,3 +1,6 @@
+// Disable terminal
+#![windows_subsystem = "windows"]
+
 use ::rand::random;
 use macroquad::color::hsl_to_rgb;
 use macroquad::prelude::*;
@@ -5,7 +8,7 @@ use macroquad::prelude::*;
 const WINDOW_WIDTH: f32 = 800.;
 const WIDOW_HEIGHT: f32 = 800.;
 
-const GRID_WIDTH: usize = 100;
+const GRID_WIDTH: usize = 350;
 
 type Hue = f32;
 
@@ -25,7 +28,7 @@ async fn main() {
     // 2d array of hue values
     let mut current_color = 0.; // 0. - 1.
     let mut canvas: Vec<Vec<Hue>> = vec![vec![current_color; GRID_WIDTH]; GRID_WIDTH]; // 2d array of hue values (0. is black)
-    let mut radius = 1;
+    let mut radius = 1 * GRID_WIDTH / 100; // reasonable default
 
     loop {
         // Shift the color
@@ -40,35 +43,39 @@ async fn main() {
             // get mouse position
             let mouse_position = mouse_position();
 
-            // get the grid position
-            let grid_x = mouse_position.0 / WINDOW_WIDTH * GRID_WIDTH as f32;
-            let grid_y = mouse_position.1 / WIDOW_HEIGHT * GRID_WIDTH as f32;
-
             // check if out of bounds
-            if !(grid_x < GRID_WIDTH as f32
-                && grid_y < GRID_WIDTH as f32
-                && grid_x > 0.
-                && grid_y > 0.)
+            if mouse_position.0 < 0.
+                || mouse_position.1 < 0.
+                || mouse_position.0 > WINDOW_WIDTH
+                || mouse_position.1 > WIDOW_HEIGHT
             {
                 continue;
             }
 
-            // convert to usize (its safe)
-            let grid_x = grid_x as usize;
-            let grid_y = grid_y as usize;
+            // get the grid position
+            let grid_x = (mouse_position.0 / WINDOW_WIDTH * GRID_WIDTH as f32) as isize;
+            let grid_y = (mouse_position.1 / WIDOW_HEIGHT * GRID_WIDTH as f32) as isize;
 
-            // set the cell
-            canvas[grid_x as usize][grid_y as usize] = current_color;
+            // spawn the sand (10% probability, around the mouse position based on the radius)
+            // ignore the out of bounds
+            for x in (grid_x - radius as isize)..(grid_x + radius as isize) {
+                for y in (grid_y - radius as isize)..(grid_y + radius as isize) {
+                    // check if out of bounds
+                    if x < 0
+                        || y < 0
+                        || x > (GRID_WIDTH - 1) as isize
+                        || y > (GRID_WIDTH - 1) as isize
+                    {
+                        continue;
+                    }
 
-            // spawn the sand (50% probability, around the mouse position based on the radius)
-            for x in grid_x - radius..grid_x + radius {
-                for y in grid_y - radius..grid_y + radius {
-                    if x < GRID_WIDTH && y < GRID_WIDTH {
-                        if random::<bool>() {
-                            // check if its in the bounds and check if it's already placed
-                            if x < GRID_WIDTH && y < GRID_WIDTH && canvas[x][y] == 0. {
-                                // set the cell
-                                canvas[x][y] = current_color;
+                    // check if the cell is empty
+                    if canvas[x as usize][y as usize] == 0. {
+                        // check if the cell is in the radius
+                        if ((x - grid_x).pow(2) + (y - grid_y).pow(2)) < (radius.pow(2) as isize) {
+                            // spawn the sand with 10% probability
+                            if random::<f32>() < 0.05 {
+                                canvas[x as usize][y as usize] = current_color;
                             }
                         }
                     }
@@ -79,7 +86,9 @@ async fn main() {
         if mouse_wheel().1 > 0. {
             radius += (mouse_wheel().1 as f32 / 120.) as usize;
         } else if mouse_wheel().1 < 0. {
-            radius -= (mouse_wheel().1.abs() as f32 / 120.) as usize;
+            if radius > mouse_wheel().1.abs() as usize / 120 {
+                radius -= (mouse_wheel().1.abs() as f32 / 120.) as usize;
+            }
         }
 
         // check if R is pressed and reset the canvas
@@ -148,6 +157,14 @@ async fn main() {
 
         // show the radius
         draw_text(&format!("Radius: {}", radius), 10., 30., 30., WHITE);
+        draw_text(
+            &format!("FPS: {}", get_fps()),
+            10.,
+            WIDOW_HEIGHT - 80.,
+            30.,
+            WHITE,
+        );
+        draw_text("Press R to reset", 10., WIDOW_HEIGHT - 40., 30., WHITE);
 
         next_frame().await
     }
