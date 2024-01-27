@@ -1,5 +1,5 @@
 [package]
-name = "falling-sand"
+name = "wgpu-falling-sand"
 version = "0.1.0"
 edition = "2021"
 
