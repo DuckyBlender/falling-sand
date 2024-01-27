@@ -1,7 +1,6 @@
 // Disable terminal
 #![windows_subsystem = "windows"]
 
-use ::rand::random;
 use macroquad::color::hsl_to_rgb;
 use macroquad::prelude::*;
 
@@ -20,6 +19,23 @@ fn window_conf() -> Conf {
         window_height: WIDOW_HEIGHT as i32,
         window_resizable: false,
         ..Default::default()
+    }
+}
+
+// xor-shift random number generator
+fn random_bool() -> bool {
+    static mut X: u32 = 123456789;
+    static mut Y: u32 = 362436069;
+    static mut Z: u32 = 521288629;
+    static mut W: u32 = 88675123;
+
+    unsafe {
+        let t = X ^ (X << 11);
+        X = Y;
+        Y = Z;
+        Z = W;
+        W = W ^ (W >> 19) ^ (t ^ (t >> 8));
+        W & 1 == 1
     }
 }
 
@@ -56,7 +72,7 @@ async fn main() {
             let grid_x = (mouse_position.0 / WINDOW_WIDTH * GRID_WIDTH as f32) as isize;
             let grid_y = (mouse_position.1 / WIDOW_HEIGHT * GRID_WIDTH as f32) as isize;
 
-            // spawn the sand (10% probability, around the mouse position based on the radius)
+            // spawn the sand (50% probability, around the mouse position based on the radius)
             // ignore the out of bounds
             for x in (grid_x - radius as isize)..(grid_x + radius as isize) {
                 for y in (grid_y - radius as isize)..(grid_y + radius as isize) {
@@ -73,8 +89,8 @@ async fn main() {
                     if canvas[x as usize][y as usize] == 0. {
                         // check if the cell is in the radius
                         if ((x - grid_x).pow(2) + (y - grid_y).pow(2)) < (radius.pow(2) as isize) {
-                            // spawn the sand with 10% probability
-                            if random::<f32>() < 0.05 {
+                            // spawn the sand with 50% probability
+                            if random_bool() {
                                 canvas[x as usize][y as usize] = current_color;
                             }
                         }
@@ -113,7 +129,7 @@ async fn main() {
                     // if the cell below is true
                     else if y < GRID_WIDTH - 1 && canvas[x][y + 1] > 0. {
                         // check randomly if the cell to the left-bottom or right-bottom is false
-                        let random_bool = random::<bool>();
+                        let random_bool = random_bool();
                         if random_bool && x > 0 && canvas[x - 1][y + 1] == 0. {
                             // set the cell to the left-bottom
                             new_canvas[x - 1][y + 1] = canvas[x][y];
